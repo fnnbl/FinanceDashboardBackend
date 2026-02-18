@@ -20,6 +20,10 @@ class PlanResponse(BaseModel):
     description: Optional[str] = None
     created_at: datetime
     updated_at: datetime
+    budget_item_count: int = 0
+    total_monthly_income: float = 0.0
+    total_monthly_expenses: float = 0.0
+    monthly_balance: float = 0.0
 
     class Config:
         from_attributes = True

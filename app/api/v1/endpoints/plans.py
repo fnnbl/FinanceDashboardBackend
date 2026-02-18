@@ -16,8 +16,7 @@ async def create_plan(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    plan = await plan_crud.create_plan(db, user_id=current_user.id, plan_create=plan_create)
-    return plan
+    return await plan_crud.create_plan(db, user_id=current_user.id, plan_create=plan_create)
 
 
 @router.get("/", response_model=list[PlanResponse])
@@ -25,7 +24,7 @@ async def get_plans(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    return await plan_crud.get_plans_by_user(db, user_id=current_user.id)
+    return await plan_crud.get_plans_with_stats(db, user_id=current_user.id)
 
 
 @router.get("/{plan_id}", response_model=PlanResponse)
@@ -39,4 +38,5 @@ async def get_plan(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Plan not found")
     if plan.user_id != current_user.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to access this plan")
-    return plan
+    plan_with_stats = await plan_crud.get_plan_with_stats(db, plan_id=plan_id)
+    return plan_with_stats
