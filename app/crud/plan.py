@@ -4,7 +4,7 @@ from typing import Optional
 
 from app.models.plan import Plan
 from app.models.budget_item import BudgetItem, BudgetItemType, PaymentRhythm
-from app.schemas.plan import PlanCreate
+from app.schemas.plan import PlanCreate, PlanUpdate
 
 
 async def create_plan(db: AsyncSession, user_id: int, plan_create: PlanCreate) -> dict:
@@ -39,6 +39,15 @@ async def get_plan_with_stats(db: AsyncSession, plan_id: int) -> Optional[dict]:
         return None
     stats = await _get_plan_stats(db, plan.id)
     return _plan_to_dict(plan, *stats)
+
+
+async def update_plan(db: AsyncSession, plan: Plan, plan_update: PlanUpdate) -> Plan:
+    update_data = plan_update.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(plan, field, value)
+    await db.commit()
+    await db.refresh(plan)
+    return plan
 
 
 async def get_plan_by_id(db: AsyncSession, plan_id: int) -> Optional[Plan]:
