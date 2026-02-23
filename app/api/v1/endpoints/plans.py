@@ -56,3 +56,17 @@ async def update_plan(
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to access this plan")
     await plan_crud.update_plan(db, plan=plan, plan_update=plan_update)
     return await plan_crud.get_plan_with_stats(db, plan_id=plan_id)
+
+
+@router.delete("/{plan_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_plan(
+    plan_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    plan = await plan_crud.get_plan_by_id(db, plan_id=plan_id)
+    if not plan:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Plan not found")
+    if plan.user_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to access this plan")
+    await plan_crud.delete_plan(db, plan=plan)

@@ -50,6 +50,11 @@ async def update_plan(db: AsyncSession, plan: Plan, plan_update: PlanUpdate) -> 
     return plan
 
 
+async def delete_plan(db: AsyncSession, plan: Plan) -> None:
+    await db.delete(plan)
+    await db.commit()
+
+
 async def get_plan_by_id(db: AsyncSession, plan_id: int) -> Optional[Plan]:
     result = await db.execute(select(Plan).where(Plan.id == plan_id))
     return result.scalars().first()
