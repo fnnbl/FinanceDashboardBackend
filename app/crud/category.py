@@ -1,7 +1,8 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, func, update
 
 from app.models.category import Category, CategoryType
+from app.models.budget_item import BudgetItem
 
 
 async def get_all_categories(db: AsyncSession) -> list[Category]:
@@ -31,6 +32,24 @@ async def update_category(db: AsyncSession, category: Category, name: str) -> Ca
     await db.commit()
     await db.refresh(category)
     return category
+
+
+async def count_budget_items_by_category(db: AsyncSession, category_id: int) -> int:
+    result = await db.execute(
+        select(func.count(BudgetItem.id)).where(BudgetItem.category_id == category_id)
+    )
+    return result.scalar() or 0
+
+
+async def delete_category(db: AsyncSession, category: Category, reassign_to_id: int | None = None) -> None:
+    if reassign_to_id:
+        await db.execute(
+            update(BudgetItem)
+            .where(BudgetItem.category_id == category.id)
+            .values(category_id=reassign_to_id)
+        )
+    await db.delete(category)
+    await db.commit()
 
 
 async def create_category(db: AsyncSession, name: str, category_type: CategoryType) -> Category:
