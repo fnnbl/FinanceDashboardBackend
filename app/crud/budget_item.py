@@ -5,6 +5,16 @@ from app.models.budget_item import BudgetItem
 from app.schemas.budget_item import BudgetItemCreate
 
 
+async def get_budget_items_by_plan(db: AsyncSession, plan_id: int) -> list[dict]:
+    result = await db.execute(
+        select(BudgetItem)
+        .where(BudgetItem.plan_id == plan_id)
+        .order_by(BudgetItem.type, BudgetItem.created_at)
+    )
+    items = result.scalars().all()
+    return [_item_to_dict(item) for item in items]
+
+
 async def create_budget_item(db: AsyncSession, plan_id: int, item_create: BudgetItemCreate) -> dict:
     db_item = BudgetItem(
         plan_id=plan_id,
