@@ -16,6 +16,19 @@ async def get_categories_by_type(db: AsyncSession, category_type: CategoryType) 
     return list(result.scalars().all())
 
 
+async def get_category_by_name(db: AsyncSession, name: str) -> Category | None:
+    result = await db.execute(select(Category).where(Category.name == name))
+    return result.scalars().first()
+
+
+async def create_category(db: AsyncSession, name: str, category_type: CategoryType) -> Category:
+    db_category = Category(name=name, type=category_type, is_system=False)
+    db.add(db_category)
+    await db.commit()
+    await db.refresh(db_category)
+    return db_category
+
+
 async def seed_default_categories(db: AsyncSession) -> None:
     result = await db.execute(select(Category).where(Category.is_system == True))
     if result.scalars().first() is not None:

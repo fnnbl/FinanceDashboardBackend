@@ -1,5 +1,12 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from datetime import datetime
+
+from app.models.category import CategoryType
+
+
+class CategoryCreate(BaseModel):
+    name: str = Field(..., min_length=1, max_length=100)
+    type: CategoryType
 
 
 class CategoryResponse(BaseModel):
