@@ -21,6 +21,18 @@ async def get_category_by_name(db: AsyncSession, name: str) -> Category | None:
     return result.scalars().first()
 
 
+async def get_category_by_id(db: AsyncSession, category_id: int) -> Category | None:
+    result = await db.execute(select(Category).where(Category.id == category_id))
+    return result.scalars().first()
+
+
+async def update_category(db: AsyncSession, category: Category, name: str) -> Category:
+    category.name = name
+    await db.commit()
+    await db.refresh(category)
+    return category
+
+
 async def create_category(db: AsyncSession, name: str, category_type: CategoryType) -> Category:
     db_category = Category(name=name, type=category_type, is_system=False)
     db.add(db_category)
