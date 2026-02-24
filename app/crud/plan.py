@@ -50,6 +50,36 @@ async def update_plan(db: AsyncSession, plan: Plan, plan_update: PlanUpdate) -> 
     return plan
 
 
+async def duplicate_plan(db: AsyncSession, source_plan: Plan, new_name: str) -> dict:
+    new_plan = Plan(
+        user_id=source_plan.user_id,
+        name=new_name,
+        description=source_plan.description,
+    )
+    db.add(new_plan)
+    await db.flush()
+
+    items_result = await db.execute(
+        select(BudgetItem).where(BudgetItem.plan_id == source_plan.id)
+    )
+    for item in items_result.scalars().all():
+        new_item = BudgetItem(
+            plan_id=new_plan.id,
+            category_id=item.category_id,
+            description=item.description,
+            amount=item.amount,
+            type=item.type,
+            payment_rhythm=item.payment_rhythm,
+            note=item.note,
+        )
+        db.add(new_item)
+
+    await db.commit()
+    await db.refresh(new_plan)
+    stats = await _get_plan_stats(db, new_plan.id)
+    return _plan_to_dict(new_plan, *stats)
+
+
 async def delete_plan(db: AsyncSession, plan: Plan) -> None:
     await db.delete(plan)
     await db.commit()
