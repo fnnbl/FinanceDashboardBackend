@@ -54,3 +54,17 @@ async def update_budget_item(
     if not item or item.plan_id != plan_id:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Budget item not found")
     return await budget_item_crud.update_budget_item(db, item=item, item_update=item_update)
+
+
+@router.delete("/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_budget_item(
+    plan_id: int,
+    item_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    await _get_plan_or_403(plan_id, current_user, db)
+    item = await budget_item_crud.get_budget_item_by_id(db, item_id=item_id)
+    if not item or item.plan_id != plan_id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Budget item not found")
+    await budget_item_crud.delete_budget_item(db, item=item)

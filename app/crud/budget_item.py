@@ -45,6 +45,11 @@ async def update_budget_item(db: AsyncSession, item: BudgetItem, item_update: Bu
     return _item_to_dict(item)
 
 
+async def delete_budget_item(db: AsyncSession, item: BudgetItem) -> None:
+    await db.delete(item)
+    await db.commit()
+
+
 def _item_to_dict(item: BudgetItem) -> dict:
     return {
         "id": item.id,
