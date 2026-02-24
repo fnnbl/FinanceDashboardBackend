@@ -14,6 +14,15 @@ class BudgetItemCreate(BaseModel):
     note: Optional[str] = None
 
 
+class BudgetItemUpdate(BaseModel):
+    category_id: Optional[int] = None
+    description: Optional[str] = Field(None, min_length=1, max_length=200)
+    amount: Optional[float] = Field(None, gt=0)
+    type: Optional[BudgetItemType] = None
+    payment_rhythm: Optional[PaymentRhythm] = None
+    note: Optional[str] = None
+
+
 class BudgetItemResponse(BaseModel):
     id: int
     plan_id: int

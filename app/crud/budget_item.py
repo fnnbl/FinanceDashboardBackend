@@ -2,7 +2,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from app.models.budget_item import BudgetItem
-from app.schemas.budget_item import BudgetItemCreate
+from app.schemas.budget_item import BudgetItemCreate, BudgetItemUpdate
 
 
 async def get_budget_items_by_plan(db: AsyncSession, plan_id: int) -> list[dict]:
@@ -29,6 +29,20 @@ async def create_budget_item(db: AsyncSession, plan_id: int, item_create: Budget
     await db.commit()
     await db.refresh(db_item)
     return _item_to_dict(db_item)
+
+
+async def get_budget_item_by_id(db: AsyncSession, item_id: int) -> BudgetItem | None:
+    result = await db.execute(select(BudgetItem).where(BudgetItem.id == item_id))
+    return result.scalars().first()
+
+
+async def update_budget_item(db: AsyncSession, item: BudgetItem, item_update: BudgetItemUpdate) -> dict:
+    update_data = item_update.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(item, field, value)
+    await db.commit()
+    await db.refresh(item)
+    return _item_to_dict(item)
 
 
 def _item_to_dict(item: BudgetItem) -> dict:
