@@ -70,3 +70,17 @@ async def delete_plan(
     if plan.user_id != current_user.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to access this plan")
     await plan_crud.delete_plan(db, plan=plan)
+
+
+@router.post("/{plan_id}/duplicate", response_model=PlanResponse, status_code=status.HTTP_201_CREATED)
+async def duplicate_plan(
+    plan_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    plan = await plan_crud.get_plan_by_id(db, plan_id=plan_id)
+    if not plan:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Plan not found")
+    if plan.user_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to access this plan")
+    return await plan_crud.duplicate_plan(db, source_plan=plan, new_name=f"Kopie von {plan.name}")
