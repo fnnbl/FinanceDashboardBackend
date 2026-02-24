@@ -1,7 +1,10 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
+from sqlalchemy.orm import selectinload
+
 from app.models.budget_item import BudgetItem
+from app.models.category import Category
 from app.schemas.budget_item import BudgetItemCreate, BudgetItemUpdate
 
 
@@ -43,6 +46,22 @@ async def update_budget_item(db: AsyncSession, item: BudgetItem, item_update: Bu
     await db.commit()
     await db.refresh(item)
     return _item_to_dict(item)
+
+
+async def get_budget_items_with_category(db: AsyncSession, plan_id: int) -> list[dict]:
+    result = await db.execute(
+        select(BudgetItem)
+        .options(selectinload(BudgetItem.category))
+        .where(BudgetItem.plan_id == plan_id)
+        .order_by(BudgetItem.type, BudgetItem.created_at)
+    )
+    items = result.scalars().all()
+    result_list = []
+    for item in items:
+        d = _item_to_dict(item)
+        d["category_name"] = item.category.name if item.category else "Unbekannt"
+        result_list.append(d)
+    return result_list
 
 
 async def delete_budget_item(db: AsyncSession, item: BudgetItem) -> None:
