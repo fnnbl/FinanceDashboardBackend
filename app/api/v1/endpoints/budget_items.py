@@ -20,6 +20,16 @@ async def _get_plan_or_403(plan_id: int, current_user: User, db: AsyncSession):
     return plan
 
 
+@router.get("/", response_model=list[BudgetItemResponse])
+async def get_budget_items(
+    plan_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    await _get_plan_or_403(plan_id, current_user, db)
+    return await budget_item_crud.get_budget_items_by_plan(db, plan_id=plan_id)
+
+
 @router.post("/", response_model=BudgetItemResponse, status_code=status.HTTP_201_CREATED)
 async def create_budget_item(
     plan_id: int,
