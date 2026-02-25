@@ -9,6 +9,7 @@ from app.schemas.plan import PlanCreate, PlanUpdate, PlanResponse
 from app.api.deps import get_current_user
 from app.models.user import User
 from app.services.pdf_export import generate_plan_pdf
+from app.services.csv_export import generate_plan_csv
 
 router = APIRouter()
 
@@ -106,4 +107,24 @@ async def export_plan_pdf(
         content=pdf_bytes,
         media_type="application/pdf",
         headers={"Content-Disposition": f'attachment; filename="{plan.name}.pdf"'},
+    )
+
+
+@router.get("/{plan_id}/export/csv")
+async def export_plan_csv(
+    plan_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    plan = await plan_crud.get_plan_by_id(db, plan_id=plan_id)
+    if not plan:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Plan not found")
+    if plan.user_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to access this plan")
+    items = await budget_item_crud.get_budget_items_with_category(db, plan_id=plan_id)
+    csv_bytes = generate_plan_csv(items)
+    return Response(
+        content=csv_bytes,
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="{plan.name}.csv"'},
     )
