@@ -9,7 +9,7 @@ from app.schemas.plan import PlanCreate, PlanUpdate, PlanResponse
 from app.api.deps import get_current_user
 from app.models.user import User
 from app.services.pdf_export import generate_plan_pdf
-from app.services.csv_export import generate_plan_csv
+from app.services.excel_export import generate_plan_excel
 
 router = APIRouter()
 
@@ -122,9 +122,9 @@ async def export_plan_csv(
     if plan.user_id != current_user.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to access this plan")
     items = await budget_item_crud.get_budget_items_with_category(db, plan_id=plan_id)
-    csv_bytes = generate_plan_csv(items)
+    xlsx_bytes = generate_plan_excel(plan.name, plan.description, items)
     return Response(
-        content=csv_bytes,
-        media_type="text/csv; charset=utf-8",
-        headers={"Content-Disposition": f'attachment; filename="{plan.name}.csv"'},
+        content=xlsx_bytes,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f'attachment; filename="{plan.name}.xlsx"'},
     )
