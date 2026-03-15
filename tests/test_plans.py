@@ -169,7 +169,7 @@ class TestExports:
         plan = await create_plan(client, auth_headers)
         r = await client.get(f"/api/v1/plans/{plan['id']}/export/csv", headers=auth_headers)
         assert r.status_code == 200
-        assert "text/csv" in r.headers["content-type"]
+        assert "spreadsheetml" in r.headers["content-type"]
 
     async def test_export_wrong_user(self, client, auth_headers, second_user_headers):
         plan = await create_plan(client, auth_headers)
